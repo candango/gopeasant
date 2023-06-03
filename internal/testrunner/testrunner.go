@@ -247,7 +247,7 @@ func (r *HttpTestRunner) Put() (resp *http.Response, err error) {
 }
 
 // BodyAsString returns the body of a request as string
-func BodyAsString(t *testing.T, resp http.Response) string {
+func BodyAsString(t *testing.T, resp *http.Response) string {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Error(err)
