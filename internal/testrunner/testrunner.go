@@ -1,4 +1,4 @@
-package peasant
+package testrunner
 
 import (
 	"bytes"
