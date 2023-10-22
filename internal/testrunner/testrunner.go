@@ -17,6 +17,7 @@ type HttpTestRunner struct {
 	clearBody   bool
 	clearHeader bool
 	clearHFunc  bool
+	clearValues bool
 	body        io.Reader
 	header      http.Header
 	handler     http.Handler
@@ -24,6 +25,7 @@ type HttpTestRunner struct {
 	method      string
 	path        string
 	t           *testing.T
+	values      url.Values
 }
 
 // NewHttpTestRunner create a new runner with empty headers, method as
@@ -34,6 +36,7 @@ func NewHttpTestRunner(t *testing.T) *HttpTestRunner {
 	r.method = http.MethodGet
 	r.path = "/"
 	r.t = t
+	r.values = url.Values{}
 	return r
 }
 
@@ -46,6 +49,8 @@ func (r *HttpTestRunner) Clear() *HttpTestRunner {
 	r.clearHFunc = false
 	r.header = http.Header{}
 	r.clearHeader = false
+	r.values = url.Values{}
+	r.clearValues = false
 	return r
 }
 
@@ -122,9 +127,15 @@ func (r *HttpTestRunner) WithStringBody(stringBody string) *HttpTestRunner {
 	return r
 }
 
-// WithMethod set the method to be used by the runner execution
+// WithMethod set the method to be used by the runner
 func (r *HttpTestRunner) WithMethod(method string) *HttpTestRunner {
 	r.method = strings.ToUpper(method)
+	return r
+}
+
+// WithValues set the url values to be used by the runner
+func (r *HttpTestRunner) WithValues(values url.Values) *HttpTestRunner {
+	r.values = values
 	return r
 }
 
@@ -137,7 +148,11 @@ func (r *HttpTestRunner) runMethod() (*http.Response, error) {
 	}
 	s := httptest.NewServer(handler)
 	defer s.Close()
-	u, err := url.Parse(s.URL + r.path)
+	path := r.path
+	if len(r.values) > 0 {
+		path = path + "?" + r.values.Encode()
+	}
+	u, err := url.Parse(s.URL + path)
 	if err != nil {
 		r.t.Error(err)
 		r.t.FailNow()
@@ -171,6 +186,10 @@ func (r *HttpTestRunner) reset() {
 	if r.clearHeader {
 		r.header = http.Header{}
 		r.clearHeader = false
+	}
+	if r.clearValues {
+		r.values = url.Values{}
+		r.clearValues = false
 	}
 }
 

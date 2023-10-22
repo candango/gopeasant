@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -201,7 +202,9 @@ func TestWithHandler(t *testing.T) {
 		})
 
 		t.Run("Request OK", func(t *testing.T) {
-			res, err := runner.WithPath("/get?selector=ok").Get()
+			values := url.Values{}
+			values.Add("selector", "ok")
+			res, err := runner.WithPath("/get").WithValues(values).Get()
 			if err != nil {
 				t.Error(err)
 			}
@@ -212,7 +215,9 @@ func TestWithHandler(t *testing.T) {
 		})
 
 		t.Run("Bad request", func(t *testing.T) {
-			res, err := runner.WithPath("/get?selector=bad").Get()
+			values := url.Values{}
+			values.Add("selector", "bad")
+			res, err := runner.WithPath("/get").WithValues(values).Get()
 			if err != nil {
 				t.Error(err)
 			}
