@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/candango/gopeasant/internal/testrunner"
+	"github.com/candango/gopeasant/testrunner"
 	"github.com/stretchr/testify/assert"
 )
 
