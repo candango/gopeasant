@@ -10,7 +10,7 @@ type NonceService interface {
 	Provided(http.ResponseWriter, *http.Request) (bool, error)
 }
 
-func nonced(resp http.ResponseWriter, req *http.Request,
+func Nonced(resp http.ResponseWriter, req *http.Request,
 	service NonceService) (err error) {
 	ok, err := service.Provided(resp, req)
 	if err != nil {
