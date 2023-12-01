@@ -194,17 +194,17 @@ func (r *HttpTestRunner) reset() {
 }
 
 // Run the http method if it is allowed
-func (r *HttpTestRunner) Run() (resp *http.Response, err error) {
+func (r *HttpTestRunner) Run() (res *http.Response, err error) {
 	defer r.reset()
 	switch r.method {
 	case http.MethodDelete, http.MethodGet, http.MethodHead, http.MethodPost,
 		http.MethodPut:
-		resp, err = r.runMethod()
+		res, err = r.runMethod()
 	default:
-		resp, err = nil, errors.New(
+		res, err = nil, errors.New(
 			fmt.Sprintf("unsupported method: %s", r.method))
 	}
-	return resp, err
+	return res, err
 }
 
 // resetMethod change to the previous method if it is the case
@@ -216,58 +216,58 @@ func (r *HttpTestRunner) resetMethod(previous string) {
 
 // Delete set method to http.Delete, call HttpTestRunner.Run, and reset method
 // to the previous if it is the case.
-func (r *HttpTestRunner) Delete() (resp *http.Response, err error) {
+func (r *HttpTestRunner) Delete() (res *http.Response, err error) {
 	previousMethod := r.method
 	r.method = http.MethodDelete
 	defer r.resetMethod(previousMethod)
 	r.method = http.MethodDelete
-	resp, err = r.Run()
-	return resp, err
+	res, err = r.Run()
+	return res, err
 }
 
 // Get set method to http.Get, call HttpTestRunner.Run, and reset method to the
 // previous if it is the case.
-func (r *HttpTestRunner) Get() (resp *http.Response, err error) {
+func (r *HttpTestRunner) Get() (res *http.Response, err error) {
 	previousMethod := r.method
 	r.method = http.MethodGet
 	defer r.resetMethod(previousMethod)
-	resp, err = r.Run()
-	return resp, err
+	res, err = r.Run()
+	return res, err
 }
 
 // Head set method to http.Head, call HttpTestRunner.Run, and reset method to
 // the previous if it is the case.
-func (r *HttpTestRunner) Head() (resp *http.Response, err error) {
+func (r *HttpTestRunner) Head() (res *http.Response, err error) {
 	previousMethod := r.method
 	r.method = http.MethodHead
 	defer r.resetMethod(previousMethod)
-	resp, err = r.Run()
-	return resp, err
+	res, err = r.Run()
+	return res, err
 }
 
 // Post set method to http.Post, call HttpTestRunner.Run, and reset method to
 // the previous if it is the case.
-func (r *HttpTestRunner) Post() (resp *http.Response, err error) {
+func (r *HttpTestRunner) Post() (res *http.Response, err error) {
 	previousMethod := r.method
 	r.method = http.MethodPost
 	defer r.resetMethod(previousMethod)
-	resp, err = r.Run()
-	return resp, err
+	res, err = r.Run()
+	return res, err
 }
 
 // Put set method to http.Put, call HttpTestRunner.Run, and reset method to
 // the previous if it is the case.
-func (r *HttpTestRunner) Put() (resp *http.Response, err error) {
+func (r *HttpTestRunner) Put() (res *http.Response, err error) {
 	previousMethod := r.method
 	r.method = http.MethodPut
 	defer r.resetMethod(previousMethod)
-	resp, err = r.Run()
-	return resp, err
+	res, err = r.Run()
+	return res, err
 }
 
 // BodyAsString returns the body of a request as string
-func BodyAsString(t *testing.T, resp *http.Response) string {
-	body, err := io.ReadAll(resp.Body)
+func BodyAsString(t *testing.T, res *http.Response) string {
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		t.Error(err)
 	}
@@ -275,8 +275,8 @@ func BodyAsString(t *testing.T, resp *http.Response) string {
 }
 
 // BodyAsJson unmarshal the body of a request to json
-func BodyAsJson(t *testing.T, resp *http.Response, jsonBody any) {
-	b, err := io.ReadAll(resp.Body)
+func BodyAsJson(t *testing.T, res *http.Response, jsonBody any) {
+	b, err := io.ReadAll(res.Body)
 	if err != nil {
 		t.Error(err)
 	}
