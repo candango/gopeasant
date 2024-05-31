@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Go ${{ matrix.node-version }}
+      - name: Setup Go ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
-          node-version: ${{ matrix.go-version }}
+          go-version: ${{ matrix.go-version }}
       - name: Install dependencies
         run: |
           go mod tidy
