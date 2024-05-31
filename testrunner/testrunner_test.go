@@ -44,8 +44,8 @@ type TargetResponse struct {
 	Message string `json:"message"`
 }
 
-func hFunc(res http.ResponseWriter, req *http.Request) {
-	targetResponse := &TargetResponse{Message: "OK from func"}
+func handlerFunc(res http.ResponseWriter, req *http.Request) {
+	targetResponse := &TargetResponse{Message: "OK from handler func"}
 	data, err := json.Marshal(targetResponse)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)

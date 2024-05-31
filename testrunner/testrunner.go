@@ -13,23 +13,58 @@ import (
 	"testing"
 )
 
+// HttpTestRunner is a runner that facilitates testing of HTTP requests.
+//
+// It allows for configuring various aspects of the request, such as clearing
+// the body, header, header function, and values.
 type HttpTestRunner struct {
-	clearBody   bool
+	// clearBody indicates whether the body should be cleared after a test run.
+	clearBody bool
+
+	// clearHeader indicates whether the header should be cleared after a test
+	// run.
 	clearHeader bool
-	clearHFunc  bool
+
+	// clearHandlerFunc indicates whether the handler function should be
+	// cleared after a test run.
+	clearHandlerFunc bool
+
+	// clearValues indicates whether the header function should be cleared
+	// after a test run.
 	clearValues bool
-	body        io.Reader
-	header      http.Header
-	handler     http.Handler
-	hFunc       func(http.ResponseWriter, *http.Request)
-	method      string
-	path        string
-	t           *testing.T
-	values      url.Values
+
+	// body represents the body of the HTTP request.
+	body io.Reader
+
+	// header represents the header of the HTTP request.
+	header http.Header
+
+	// handler represents the HTTP handler to be tested.
+	handler http.Handler
+
+	// handlerFunc represents the HTTP handler function to be tested.
+	handlerFunc func(http.ResponseWriter, *http.Request)
+
+	// method represents the HTTP method to be tested (e.g., "GET", "POST",
+	// etc.).
+	method string
+
+	// path represents the path to be tested.
+	path string
+
+	// t represents the testing instance.
+	t *testing.T
+
+	// values represents the URL values to be tested.
+	values url.Values
 }
 
-// NewHttpTestRunner create a new runner with empty headers, method as
-// http.MethodGet and root path as default.
+// NewHttpTestRunner creates a new HttpTestRunner, equipped with empty headers
+// and default HTTP method as GET.
+//
+// The root path is also set to its default value '/'.
+//
+// It's designed to streamline HTTP testing with ease and efficiency.
 func NewHttpTestRunner(t *testing.T) *HttpTestRunner {
 	r := &HttpTestRunner{}
 	r.header = http.Header{}
@@ -40,13 +75,16 @@ func NewHttpTestRunner(t *testing.T) *HttpTestRunner {
 	return r
 }
 
-// Clear set body and hFunc as nil, and empty the header.
-// Also clearBody, clearHFunc, and clearHeader flags are set to false.
+// Clear resets the HttpTestRunner by setting the body and handler func to nil
+// while clearing the header.
+//
+// It also resets the clearBody, clearHandlerFunc, and clearHeader flags to
+// false, ensuring a clean slate for future tests.
 func (r *HttpTestRunner) Clear() *HttpTestRunner {
 	r.body = nil
 	r.clearBody = false
-	r.hFunc = nil
-	r.clearHFunc = false
+	r.handlerFunc = nil
+	r.clearHandlerFunc = false
 	r.header = http.Header{}
 	r.clearHeader = false
 	r.values = url.Values{}
@@ -54,34 +92,36 @@ func (r *HttpTestRunner) Clear() *HttpTestRunner {
 	return r
 }
 
-// ClearBodyAfter set body to be cleared after HttpTestRunner.Run execution
+// ClearBodyAfter ensures that body will be cleared after the
+// HttpTestRunner.Run execution.
 func (r *HttpTestRunner) ClearBodyAfter() *HttpTestRunner {
 	r.clearBody = true
 	return r
 }
 
-// ClearBodyAfter set hFunc to be cleared after HttpTestRunner.Run execution
-func (r *HttpTestRunner) ClearFuncAfter() *HttpTestRunner {
-	r.clearHFunc = true
+// ClearHandlerFuncAfter ensures that the handler function to be tested will be
+// cleared after the HttpTestRunner.Run execution.
+func (r *HttpTestRunner) ClearHandlerFuncAfter() *HttpTestRunner {
+	r.clearHandlerFunc = true
 	return r
 }
 
-// ClearHeaderAfter set the header to be cleared after HttpTestRunner.Run
-// execution
+// ClearHeaderAfter ensures that headers will be cleared after the
+// HttpTestRunner.Run execution.
 func (r *HttpTestRunner) ClearHeaderAfter() *HttpTestRunner {
 	r.clearHeader = true
 	return r
 }
 
-// WithFunc set a function to be exectued by the runner.
+// WithHandlerFunc set a function to be exectued by the runner.
 //
 // If a function is defined, it will bypass the handler.
 //
 // Use ClearFuncAfter to run the function once and clear it for the next
 // HttpTestRunner.Run execution.
-func (r *HttpTestRunner) WithFunc(
-	hFunc func(http.ResponseWriter, *http.Request)) *HttpTestRunner {
-	r.hFunc = hFunc
+func (r *HttpTestRunner) WithHandlerFunc(
+	handlerFunc func(http.ResponseWriter, *http.Request)) *HttpTestRunner {
+	r.handlerFunc = handlerFunc
 	return r
 }
 
@@ -139,12 +179,15 @@ func (r *HttpTestRunner) WithValues(values url.Values) *HttpTestRunner {
 	return r
 }
 
-// runMethod executes the http method following HttpTestRunner configuration.
-// If hFunc is defined it will bypass a handler even if defined.
+// runMethod executes the HTTP request method specified by the HttpTestRunner
+// struct.
+//
+// If runnner is running  with a WithHandlerFunc, it will bypass a defined
+// handler.
 func (r *HttpTestRunner) runMethod() (*http.Response, error) {
 	handler := r.handler
-	if r.hFunc != nil {
-		handler = http.HandlerFunc(r.hFunc)
+	if r.handlerFunc != nil {
+		handler = http.HandlerFunc(r.handlerFunc)
 	}
 	s := httptest.NewServer(handler)
 	defer s.Close()
@@ -174,14 +217,17 @@ func (r *HttpTestRunner) runMethod() (*http.Response, error) {
 	return res, err
 }
 
+// reset resets the state of the HttpTestRunner struct, clearing body, handler
+// function, header, and values if their corresponding clear flags are set to
+// true.
 func (r *HttpTestRunner) reset() {
 	if r.clearBody {
 		r.body = nil
 		r.clearBody = false
 	}
-	if r.clearHFunc {
-		r.hFunc = nil
-		r.clearHFunc = false
+	if r.clearHandlerFunc {
+		r.handlerFunc = nil
+		r.clearHandlerFunc = false
 	}
 	if r.clearHeader {
 		r.header = http.Header{}
@@ -193,12 +239,13 @@ func (r *HttpTestRunner) reset() {
 	}
 }
 
-// Run the http method if it is allowed
+// Run executes the HTTP request method specified by the HttpTestRunner struct
+// and returns the response and an error if any occurred during the execution.
 func (r *HttpTestRunner) Run() (res *http.Response, err error) {
 	defer r.reset()
 	switch r.method {
-	case http.MethodDelete, http.MethodGet, http.MethodHead, http.MethodPost,
-		http.MethodPut:
+	case http.MethodDelete, http.MethodGet, http.MethodHead, http.MethodPatch,
+		http.MethodPost, http.MethodPut:
 		res, err = r.runMethod()
 	default:
 		res, err = nil, errors.New(
@@ -207,15 +254,18 @@ func (r *HttpTestRunner) Run() (res *http.Response, err error) {
 	return res, err
 }
 
-// resetMethod change to the previous method if it is the case
+// resetMethod resets the HTTP method of the HttpTestRunner struct to the
+// specified previous method if it is different from the current method.
 func (r *HttpTestRunner) resetMethod(previous string) {
 	if previous != r.method {
 		r.method = previous
 	}
 }
 
-// Delete set method to http.Delete, call HttpTestRunner.Run, and reset method
-// to the previous if it is the case.
+// Delete executes an HTTP DELETE request using HttpTestRunner.Run and returns
+// the response and an error if any occurred during the execution.
+//
+// It will reset to the previous method in case if it wasn't http.MethodDelete.
 func (r *HttpTestRunner) Delete() (res *http.Response, err error) {
 	previousMethod := r.method
 	r.method = http.MethodDelete
@@ -225,8 +275,10 @@ func (r *HttpTestRunner) Delete() (res *http.Response, err error) {
 	return res, err
 }
 
-// Get set method to http.Get, call HttpTestRunner.Run, and reset method to the
-// previous if it is the case.
+// Get executes an HTTP GET request using HttpTestRunner.Run and returns
+// the response and an error if any occurred during the execution.
+//
+// It will reset to the previous method in case if it wasn't http.MethodGet.
 func (r *HttpTestRunner) Get() (res *http.Response, err error) {
 	previousMethod := r.method
 	r.method = http.MethodGet
@@ -235,8 +287,10 @@ func (r *HttpTestRunner) Get() (res *http.Response, err error) {
 	return res, err
 }
 
-// Head set method to http.Head, call HttpTestRunner.Run, and reset method to
-// the previous if it is the case.
+// Head executes an HTTP HEAD request using HttpTestRunner.Run and returns
+// the response and an error if any occurred during the execution.
+//
+// It will reset to the previous method in case if it wasn't http.MethodHead.
 func (r *HttpTestRunner) Head() (res *http.Response, err error) {
 	previousMethod := r.method
 	r.method = http.MethodHead
@@ -245,8 +299,22 @@ func (r *HttpTestRunner) Head() (res *http.Response, err error) {
 	return res, err
 }
 
-// Post set method to http.Post, call HttpTestRunner.Run, and reset method to
-// the previous if it is the case.
+// Patch executes an HTTP PATCH request using HttpTestRunner.Run and returns
+// the response and an error if any occurred during the execution.
+//
+// It will reset to the previous method in case if it wasn't http.MethodPatch.
+func (r *HttpTestRunner) Patch() (res *http.Response, err error) {
+	previousMethod := r.method
+	r.method = http.MethodPatch
+	defer r.resetMethod(previousMethod)
+	res, err = r.Run()
+	return res, err
+}
+
+// Post executes an HTTP POST request using HttpTestRunner.Run and returns
+// the response and an error if any occurred during the execution.
+//
+// It will reset to the previous method in case if it wasn't http.MethodPost.
 func (r *HttpTestRunner) Post() (res *http.Response, err error) {
 	previousMethod := r.method
 	r.method = http.MethodPost
@@ -255,8 +323,10 @@ func (r *HttpTestRunner) Post() (res *http.Response, err error) {
 	return res, err
 }
 
-// Put set method to http.Put, call HttpTestRunner.Run, and reset method to
-// the previous if it is the case.
+// Put executes an HTTP PUT request using HttpTestRunner.Run and returns
+// the response and an error if any occurred during the execution.
+//
+// It will reset to the previous method in case if it wasn't http.MethodPut.
 func (r *HttpTestRunner) Put() (res *http.Response, err error) {
 	previousMethod := r.method
 	r.method = http.MethodPut
