@@ -182,14 +182,15 @@ func TestWithHandler(t *testing.T) {
 	runner := NewHttpTestRunner(t).WithHandler(NewTargetHandler())
 
 	t.Run("With func, clear func after", func(t *testing.T) {
-		res, err := runner.WithFunc(hFunc).ClearFuncAfter().Get()
+		res, err := runner.WithHandlerFunc(
+			handlerFunc).ClearHandlerFuncAfter().Get()
 		if err != nil {
 			t.Error(err)
 		}
 		jsonBody := &TargetResponse{}
 		BodyAsJson(t, res, jsonBody)
 		assert.Equal(t, "200 OK", res.Status)
-		assert.Equal(t, jsonBody.Message, "OK from func")
+		assert.Equal(t, jsonBody.Message, "OK from handler func")
 	})
 
 	t.Run("Get Request tests", func(t *testing.T) {
