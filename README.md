@@ -27,4 +27,4 @@ initiatives. Available under the
 This site and all documentation are licensed under
 [Creative Commons 3.0](http://creativecommons.org/licenses/by/3.0/).
 
-Copyright © 2023 Flavio Gonçalves Garcia
+Copyright © 2024 Flavio Garcia
