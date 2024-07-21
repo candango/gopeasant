@@ -21,4 +21,4 @@ jobs:
           go mod tidy
       - name: Run go unit tests
         run: |
-          CGO_ENABLED=0 go clean -testcache && go test  . ./testrunner
+          CGO_ENABLED=0 go clean -testcache && go test -v  ./...
