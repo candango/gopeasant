@@ -1,21 +1,24 @@
 # Candango Go Peasant
 
-Peasant is a protocol abstraction of how to control agents that need to
-communicate with a central entity or entities.
+Peasant Protocol: A Contract for Controlling Agents
 
-We define agents as peasants and central entities (bases) as bastions.
+The Peasant protocol is a high-level abstraction designed to facilitate
+communication between agents (peasants) and central entities (bastions). It
+does not impose specific implementation details, security requirements, or
+redundancy levels, but instead establishes a minimal contract for what must be
+implemented.
 
-This project won't define the implementation, security level neither levels of
-redundancies but instead a minimal contract of what should be implemented.
+In this protocol, agents are referred to as peasants, while central entities
+are called bastions. The relationship between a bastion and peasant can be
+either stateful or stateless. In a stateful scenario, bastions must implement
+a session control mechanism, requiring peasants to perform "knocks" (similar
+to knocking on a door) to request permission or establish a valid session. In a
+stateless scenario, the concept of knocking is ignored.
 
-A bastion/peasant relationship could be defined as stateful or not. If stateful
-it is necessary to implement a session control in the bastion where peasants
-need to perform knocks (as knock at the door) for permission or a valid session.
-In a stateless case we just ignore any knock implementation.
-
-What must be implemented in the protocol are nonce generation, consumption and
-validation on both sides and a directory list of available resources offered by
-a bastion for peasants to consume.
+The Peasant protocol mandates the implementation of nonce generation,
+consumption and validation on both the peasant and bastion sides.
+Additionally, bastions must provide a directory list of available resources
+that peasants can consume.
 
 ## Support
 

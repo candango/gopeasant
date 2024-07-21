@@ -3,6 +3,7 @@ package peasant
 import (
 	"math/rand"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -48,22 +49,22 @@ func (s *InMemoryNonceService) Clear(nonce string) error {
 // Consume consumes the nonce associated with a specified key and returns
 // whether the nonce was successfully consumed and any error that occurred.
 func (s *InMemoryNonceService) Consume(res http.ResponseWriter,
-	req *http.Request) (bool, error) {
+	req *http.Request) error {
 	nonce := req.Header.Get("nonce")
 	if nonce == "" {
 		res.WriteHeader(http.StatusForbidden)
-		return false, nil
+		return nil
 	}
 	_, ok := s.nonceMap[nonce]
 	if !ok {
 		res.WriteHeader(http.StatusForbidden)
-		return false, nil
+		return nil
 	}
 	err := s.Clear(nonce)
 	if err != nil {
-		return false, err
+		return err
 	}
-	return true, nil
+	return nil
 }
 
 func (s *InMemoryNonceService) GetNonce(req *http.Request) (string, error) {
@@ -87,14 +88,21 @@ func (s *InMemoryNonceService) GetNonce(req *http.Request) (string, error) {
 	return nonce, nil
 }
 
-func (s *InMemoryNonceService) Provided(res http.ResponseWriter,
-	req *http.Request) (bool, error) {
-	nonce := req.Header.Get("nonce")
-	if nonce == "" {
-		res.WriteHeader(http.StatusForbidden)
-		return false, nil
+func (s *InMemoryNonceService) IsNonced(r *http.Request) bool {
+	if strings.Contains(r.URL.String(), "new-nonce") {
+		return false
 	}
-	return true, nil
+	return true
+}
+
+func (s *InMemoryNonceService) IsProvided(w http.ResponseWriter,
+	r *http.Request) error {
+	nonce := r.Header.Get("nonce")
+	if nonce == "" {
+		w.WriteHeader(http.StatusForbidden)
+		return nil
+	}
+	return nil
 }
 
 type NoncedHandler struct {
@@ -102,7 +110,31 @@ type NoncedHandler struct {
 	service NonceService
 }
 
-func NewNoncedServeMux(t *testing.T) *http.ServeMux {
+func (h *NoncedHandler) getNonce(w http.ResponseWriter, r *http.Request) {
+	method := r.Method
+	if method != http.MethodHead {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	nonce, err := h.service.GetNonce(r)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Add("nonce", nonce)
+}
+
+func (h *NoncedHandler) doNoncedFunc(w http.ResponseWriter, r *http.Request) {
+	method := r.Method
+	if method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	nonce := r.Header.Get("nonce")
+	w.Write([]byte("Func done with nonce " + nonce))
+}
+
+func NewNoncedFuncServeMux(t *testing.T) *http.ServeMux {
 	s := &InMemoryNonceService{
 		nonceMap: make(map[string]*interface{}),
 		t:        t,
@@ -111,46 +143,19 @@ func NewNoncedServeMux(t *testing.T) *http.ServeMux {
 		service: s,
 	}
 	h := http.NewServeMux()
-	h.HandleFunc("/new-nonce", nonced.getNonce)
+	h.HandleFunc("/new-nonce", NoncedHandlerFunc(s, nonced.getNonce))
 	h.HandleFunc("/do-nonced-something",
 		NoncedHandlerFunc(s, nonced.doNoncedFunc))
 	return h
 }
 
-func (h *NoncedHandler) getNonce(res http.ResponseWriter, req *http.Request) {
-	method := req.Method
-	if method != http.MethodHead {
-		res.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	nonce, err := h.service.GetNonce(req)
-	if err != nil {
-		res.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	res.Header().Add("nonce", nonce)
-}
-
-func (h *NoncedHandler) doNoncedFunc(res http.ResponseWriter, req *http.Request) {
-	method := req.Method
-	if method != http.MethodGet {
-		res.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	nonce := req.Header.Get("nonce")
-	res.Write([]byte("Func done with nonce " + nonce))
-}
-
-func TestServer(t *testing.T) {
-	runner := testrunner.NewHttpTestRunner(t).WithHandler(NewNoncedServeMux(t))
+func TestNoncedFuncServer(t *testing.T) {
+	handler := NewNoncedFuncServeMux(t)
+	runner := testrunner.NewHttpTestRunner(t).WithHandler(handler)
 
 	t.Run("Retrieve a new nonce", func(t *testing.T) {
 		t.Run("Request OK", func(t *testing.T) {
-			res, err := runner.WithPath("/new-nonce").Get()
-			assert.Equal(t, "405 Method Not Allowed", res.Status)
-			assert.Equal(t, http.NoBody, res.Body)
-
-			res, err = runner.WithPath("/new-nonce").Head()
+			res, err := runner.WithPath("/new-nonce").Head()
 			if err != nil {
 				t.Error(err)
 			}
