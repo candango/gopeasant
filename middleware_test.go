@@ -19,18 +19,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/candango/gopeasant/dummy"
 	"github.com/candango/gopeasant/testrunner"
 	"github.com/stretchr/testify/assert"
 )
 
 func NewNoncedServeMux(t *testing.T) http.Handler {
-	s := &InMemoryNonceService{
-		nonceMap: make(map[string]*interface{}),
-		t:        t,
-	}
-	nonced := &NoncedHandler{
-		service: s,
-	}
+	s := dummy.NewDummyInMemoryNonceService()
 	h := http.NewServeMux()
 	h.HandleFunc("/new-nonce", nonced.getNonce)
 	h.HandleFunc("/do-nonced-something", nonced.doNoncedFunc)
