@@ -24,17 +24,53 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func NewNoncedServeMux(t *testing.T) http.Handler {
+type NoncedHandler struct {
+	http.Handler
+	s NonceService
+}
+
+func (h *NoncedHandler) GetNonce(w http.ResponseWriter, r *http.Request) {
+	method := r.Method
+	if method != http.MethodHead {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	nonce, err := h.s.GetNonce(r)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Add("nonce", nonce)
+}
+
+func (h *NoncedHandler) DoNoncedFunc(w http.ResponseWriter, r *http.Request) {
+	method := r.Method
+	if method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	nonce := r.Header.Get("nonce")
+	w.Write([]byte("Func done with nonce " + nonce))
+}
+
+func NewNoncedHandler(s NonceService) *NoncedHandler {
+	return &NoncedHandler{
+		s: s,
+	}
+}
+
+func NewNoncedFuncServeMux(t *testing.T) *http.ServeMux {
 	s := dummy.NewDummyInMemoryNonceService()
 	nonced := NewNoncedHandler(s)
 	h := http.NewServeMux()
-	h.HandleFunc("/new-nonce", nonced.GetNonce)
-	h.HandleFunc("/do-nonced-something", nonced.DoNoncedFunc)
-	return Nonced(h, s)
+	h.HandleFunc("/new-nonce", NoncedHandlerFunc(s, nonced.GetNonce))
+	h.HandleFunc("/do-nonced-something",
+		NoncedHandlerFunc(s, nonced.DoNoncedFunc))
+	return h
 }
 
-func TestNoncedServer(t *testing.T) {
-	handler := NewNoncedServeMux(t)
+func TestNoncedFuncServer(t *testing.T) {
+	handler := NewNoncedFuncServeMux(t)
 	runner := testrunner.NewHttpTestRunner(t).WithHandler(handler)
 
 	t.Run("Retrieve a new nonce", func(t *testing.T) {
