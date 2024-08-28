@@ -12,17 +12,53 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package peasant
+package middleware
 
 import (
 	"net/http"
 	"testing"
 	"time"
 
+	peasant "github.com/candango/gopeasant"
 	"github.com/candango/gopeasant/dummy"
 	"github.com/candango/gopeasant/testrunner"
 	"github.com/stretchr/testify/assert"
 )
+
+type NoncedHandler struct {
+	http.Handler
+	s peasant.NonceService
+}
+
+func (h *NoncedHandler) GetNonce(w http.ResponseWriter, r *http.Request) {
+	method := r.Method
+	if method != http.MethodHead {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	nonce, err := h.s.GetNonce(r)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Add("nonce", nonce)
+}
+
+func (h *NoncedHandler) DoNoncedFunc(w http.ResponseWriter, r *http.Request) {
+	method := r.Method
+	if method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	nonce := r.Header.Get("nonce")
+	w.Write([]byte("Func done with nonce " + nonce))
+}
+
+func NewNoncedHandler(s peasant.NonceService) *NoncedHandler {
+	return &NoncedHandler{
+		s: s,
+	}
+}
 
 func NewNoncedServeMux(t *testing.T) http.Handler {
 	s := dummy.NewDummyInMemoryNonceService()
