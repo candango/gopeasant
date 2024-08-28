@@ -44,10 +44,10 @@ type NonceService interface {
 	// the nonce generation or header update.
 	GetNonce(*http.Request) (string, error)
 
-	// IsNonced return if the request should be nonced or not.
-	IsNonced(*http.Request) bool
+	// Skip return if the request should be nonced or not.
+	Skip(*http.Request) bool
 
-	// IsProvided verifies the presence of a valid nonce in the specified HTTP
+	// Provided verifies the presence of a valid nonce in the specified HTTP
 	// request.
 	//
 	// If the nonce is not provided or is invalid, it sets the response HTTP
@@ -55,5 +55,5 @@ type NonceService interface {
 	// based on the specific conditions and checks performed within the method.
 	// If nonce is not provided header sould be set with the respective http
 	// error code.
-	IsProvided(http.ResponseWriter, *http.Request) error
+	Provided(http.ResponseWriter, *http.Request) error
 }

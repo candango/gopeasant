@@ -30,7 +30,7 @@ func NoncedHandlerFunc(
 	s NonceService, f func(http.ResponseWriter, *http.Request),
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !s.IsNonced(r) {
+		if s.Skip(r) {
 			f(w, r)
 			return
 		}
@@ -38,7 +38,7 @@ func NoncedHandlerFunc(
 			ResponseWriter: w,
 			StatusCode:     http.StatusOK,
 		}
-		err := s.IsProvided(wrapped, r)
+		err := s.Provided(wrapped, r)
 		if err != nil {
 			wrapped.WriteHeader(http.StatusInternalServerError)
 			return

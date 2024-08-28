@@ -97,14 +97,14 @@ func (s *DummyInMemoryNonceService) GetNonce(req *http.Request) (string, error) 
 	return nonce, nil
 }
 
-func (s *DummyInMemoryNonceService) IsNonced(r *http.Request) bool {
+func (s *DummyInMemoryNonceService) Skip(r *http.Request) bool {
 	if strings.Contains(r.URL.String(), "new-nonce") {
-		return false
+		return true
 	}
-	return true
+	return false
 }
 
-func (s *DummyInMemoryNonceService) IsProvided(w http.ResponseWriter,
+func (s *DummyInMemoryNonceService) Provided(w http.ResponseWriter,
 	r *http.Request) error {
 	nonce := r.Header.Get("nonce")
 	if nonce == "" {
