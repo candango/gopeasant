@@ -1,6 +1,6 @@
 module github.com/candango/gopeasant
 
-go 1.18
+go 1.20
 
 require (
 	github.com/go-kit/kit v0.13.0
