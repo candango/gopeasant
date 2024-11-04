@@ -58,7 +58,7 @@ func (tt *TestTransport) DoSomething(t *testing.T) (string, error) {
 	}
 	req.Header.Add("nonce", nonce)
 
-	res, err := tt.client.Do(req)
+	res, err := tt.Client.Do(req)
 	if err != nil {
 		return "", err
 	}

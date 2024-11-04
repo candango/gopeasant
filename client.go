@@ -32,21 +32,21 @@ type Transport interface {
 
 // HttpTransport implements the Transport interface for HTTP communications.
 type HttpTransport struct {
+	// Client is the HTTP Client used for making requests.
+	http.Client
 	// Url is the base URL for the transport.
 	Url string
 	// nonceKey is the header key used to retrieve the nonce from responses.
 	nonceKey string
-	// client is the HTTP client used for making requests.
-	client http.Client
 }
 
 // NewHttpTransport initializes a new HttpTransport with the given URL and
 // nonce key.
 func NewHttpTransport(url string, nonceKey string) *HttpTransport {
 	return &HttpTransport{
+		http.Client{},
 		url,
 		nonceKey,
-		http.Client{},
 	}
 }
 
@@ -90,7 +90,7 @@ func (ht *HttpTransport) NewNonce() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	res, err := ht.client.Do(req)
+	res, err := ht.Client.Do(req)
 	if err != nil {
 		return "", err
 	}
