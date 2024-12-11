@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/candango/gopeasant/dummy"
-	"github.com/candango/gopeasant/testrunner"
+	"github.com/candango/httpok/testrunner"
 	"github.com/stretchr/testify/assert"
 )
 
