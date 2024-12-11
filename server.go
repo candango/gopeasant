@@ -14,17 +14,11 @@
 
 package peasant
 
-import "net/http"
+import (
+	"net/http"
 
-type WrappedWriter struct {
-	http.ResponseWriter
-	StatusCode int
-}
-
-func (w *WrappedWriter) WriteHeader(c int) {
-	w.ResponseWriter.WriteHeader(c)
-	w.StatusCode = c
-}
+	"github.com/candango/httpok"
+)
 
 func NoncedHandlerFunc(
 	s NonceService, f func(http.ResponseWriter, *http.Request),
@@ -34,7 +28,7 @@ func NoncedHandlerFunc(
 			f(w, r)
 			return
 		}
-		wrapped := &WrappedWriter{
+		wrapped := &httpok.WrappedWriter{
 			ResponseWriter: w,
 			StatusCode:     http.StatusOK,
 		}
