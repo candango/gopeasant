@@ -12,13 +12,16 @@ import (
 type Transport interface {
 	// NewNonce generates a new nonce.
 	NewNonce() (string, error)
-	// NewNonce generates a new nonce.
+	// Directory returns the directory map.
 	Directory() (map[string]interface{}, error)
 }
 
 // HttpTransport implements the Transport interface for HTTP communications.
 type HttpTransport struct {
+	// DirectoryProvider is embedded to provide directory-related functionality.
 	DirectoryProvider
+	// DirectoryMethod specifies the HTTP method used for directory operations.
+	DirectoryMethod string
 	// Client is the HTTP Client used for making requests.
 	http.Client
 	// nonceKey is the header key used to retrieve the nonce from responses.
@@ -30,6 +33,7 @@ type HttpTransport struct {
 func NewHttpTransport(p DirectoryProvider, nonceKey string) *HttpTransport {
 	return &HttpTransport{
 		p,
+		http.MethodHead,
 		http.Client{},
 		nonceKey,
 	}
@@ -62,7 +66,7 @@ func (ht *HttpTransport) NewNonce() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	req, err := http.NewRequest(http.MethodHead, url, nil)
+	req, err := http.NewRequest(ht.DirectoryMethod, url, nil)
 	if err != nil {
 		return "", err
 	}
