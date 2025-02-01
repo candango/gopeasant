@@ -35,15 +35,6 @@ func NewHttpTransport(p DirectoryProvider, nonceKey string) *HttpTransport {
 	}
 }
 
-// Directory returns a map of available resources, including the URL for new
-// nonce generation. This method should be overridden if the developer needs
-// to retrieve dynamic data from the server's directory.
-func (ht *HttpTransport) Directory() (map[string]interface{}, error) {
-	return map[string]interface{}{
-		"newNonce": ht.GetUrl() + "/nonce/new-nonce",
-	}, nil
-}
-
 // NewNonceUrl returns the URL for generating a new nonce. Developers should
 // override this method if the new nonce URL needs to be resolved differently.
 func (ht *HttpTransport) NewNonceUrl() (string, error) {
