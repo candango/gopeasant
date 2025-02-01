@@ -29,4 +29,4 @@ initiatives. Available under the [MIT License](https://mit-license.org).
 This site and all documentation are licensed under
 [Creative Commons 3.0](http://creativecommons.org/licenses/by/3.0/).
 
-Copyright © 2024 Flavio Garcia
+Copyright © 2025 Flavio Garcia

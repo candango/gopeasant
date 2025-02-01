@@ -1,17 +1,3 @@
-// Copyright 2023-2024 Flavio Garcia
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//	http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package peasant
 
 import (
@@ -32,20 +18,19 @@ type Transport interface {
 
 // HttpTransport implements the Transport interface for HTTP communications.
 type HttpTransport struct {
+	DirectoryProvider
 	// Client is the HTTP Client used for making requests.
 	http.Client
-	// Url is the base URL for the transport.
-	Url string
 	// nonceKey is the header key used to retrieve the nonce from responses.
 	nonceKey string
 }
 
 // NewHttpTransport initializes a new HttpTransport with the given URL and
 // nonce key.
-func NewHttpTransport(url string, nonceKey string) *HttpTransport {
+func NewHttpTransport(p DirectoryProvider, nonceKey string) *HttpTransport {
 	return &HttpTransport{
+		p,
 		http.Client{},
-		url,
 		nonceKey,
 	}
 }
@@ -55,7 +40,7 @@ func NewHttpTransport(url string, nonceKey string) *HttpTransport {
 // to retrieve dynamic data from the server's directory.
 func (ht *HttpTransport) Directory() (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"newNonce": ht.Url + "/nonce/new-nonce",
+		"newNonce": ht.GetUrl() + "/nonce/new-nonce",
 	}, nil
 }
 
@@ -98,6 +83,26 @@ func (ht *HttpTransport) NewNonce() (string, error) {
 		return "", errors.New(res.Status)
 	}
 	return ht.ResolveNonce(res), nil
+}
+
+type DirectoryProvider interface {
+	// NewNonce generates a new nonce.
+	Directory() (map[string]interface{}, error)
+	GetUrl() string
+}
+
+type MemoryDirectoryProvider struct {
+	url string
+}
+
+func (p *MemoryDirectoryProvider) Directory() (map[string]any, error) {
+	return map[string]interface{}{
+		"newNonce": p.GetUrl() + "/nonce/new-nonce",
+	}, nil
+}
+
+func (p *MemoryDirectoryProvider) GetUrl() string {
+	return p.url
 }
 
 // Peasant represents an agent in the Peasant protocol, which communicates with

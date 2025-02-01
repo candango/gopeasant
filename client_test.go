@@ -1,17 +1,3 @@
-// Copyright 2023-2024 Flavio Garcia
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//	http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package peasant
 
 import (
@@ -37,7 +23,7 @@ func (tt *TestTransport) Directory() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	d["doSomething"] = tt.Url + "/nonce/do-nonced-something"
+	d["doSomething"] = tt.GetUrl() + "/nonce/do-nonced-something"
 	return d, nil
 }
 
@@ -95,7 +81,8 @@ func NewServer(t *testing.T) *httptest.Server {
 
 func TestHttpTransport(t *testing.T) {
 	server := NewServer(t)
-	ht := NewHttpTransport(server.URL, "Nonce")
+	dp := &MemoryDirectoryProvider{server.URL}
+	ht := NewHttpTransport(dp, "Nonce")
 
 	t.Run("Plain Peasant and Transport", func(t *testing.T) {
 		p := NewPeasant(ht)
