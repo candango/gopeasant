@@ -3,7 +3,7 @@ module github.com/candango/gopeasant
 go 1.20
 
 require (
-	github.com/candango/httpok v0.0.6
+	github.com/candango/httpok v0.0.7
 	github.com/stretchr/testify v1.9.0
 )
 
