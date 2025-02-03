@@ -3,6 +3,7 @@ package peasant
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -20,22 +21,25 @@ type Transport interface {
 type HttpTransport struct {
 	// DirectoryProvider is embedded to provide directory-related functionality.
 	DirectoryProvider
+	// DirectoryKey is the key used to retrieve the directory-related url.
+	DirectoryKey string
 	// DirectoryMethod specifies the HTTP method used for directory operations.
 	DirectoryMethod string
 	// Client is the HTTP Client used for making requests.
 	http.Client
-	// nonceKey is the header key used to retrieve the nonce from responses.
-	nonceKey string
+	// NonceKey is the header key used to retrieve the nonce from responses.
+	NonceKey string
 }
 
 // NewHttpTransport initializes a new HttpTransport with the given URL and
 // nonce key.
-func NewHttpTransport(p DirectoryProvider, nonceKey string) *HttpTransport {
+func NewHttpTransport(p DirectoryProvider) *HttpTransport {
 	return &HttpTransport{
-		p,
-		http.MethodHead,
-		http.Client{},
-		nonceKey,
+		DirectoryProvider: p,
+		DirectoryKey:      "newNonce",
+		DirectoryMethod:   http.MethodHead,
+		Client:            http.Client{},
+		NonceKey:          "Nonce",
 	}
 }
 
@@ -46,14 +50,21 @@ func (ht *HttpTransport) NewNonceUrl() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return d["newNonce"].(string), nil
+	val, ok := d[ht.DirectoryKey]
+	if !ok {
+		return "", errors.New(fmt.Sprintf(
+			"the transport wasn't able to find the nonce key %s",
+			ht.DirectoryKey,
+		))
+	}
+	return val.(string), nil
 }
 
 // ResolveNonce extracts the nonce from the response headers using the
 // predefined nonceKey. Developers should override this method if the nonce
 // needs to be resolved in a different way.
 func (ht *HttpTransport) ResolveNonce(res *http.Response) string {
-	return res.Header.Get(ht.nonceKey)
+	return res.Header.Get(ht.NonceKey)
 }
 
 // NewNonce generates a new nonce by making an HTTP HEAD request to the new

@@ -2,6 +2,7 @@ package peasant
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -82,9 +83,42 @@ func NewServer(t *testing.T) *httptest.Server {
 func TestHttpTransport(t *testing.T) {
 	server := NewServer(t)
 	dp := &MemoryDirectoryProvider{server.URL}
-	ht := NewHttpTransport(dp, "Nonce")
+	ht := NewHttpTransport(dp)
 
-	t.Run("Plain Peasant and Transport", func(t *testing.T) {
+	t.Run("NewNonceUrl should return url if DirectoryKey is valid and error otherwise", func(t *testing.T) {
+		directoryKey := ht.DirectoryKey
+		url, err := ht.NewNonceUrl()
+		if err != nil {
+			t.Error(err)
+		}
+		assert.Equal(t, fmt.Sprintf("%s/nonce/new-nonce", server.URL), url)
+		ht.DirectoryKey = "BadDirectoryKey"
+		url, err = ht.NewNonceUrl()
+		if err != nil {
+			assert.NotNil(t, err)
+		}
+		assert.Empty(t, url)
+		ht.DirectoryKey = directoryKey
+	})
+
+	t.Run("NewNonce should return value if NonceKey is value and error otherwise", func(t *testing.T) {
+		nonceKey := ht.NonceKey
+		value, err := ht.NewNonce()
+		ht.NewNonce()
+		if err != nil {
+			t.Error(err)
+		}
+		assert.NotEmpty(t, value)
+		ht.NonceKey = "BadNonceKey"
+		value, err = ht.NewNonce()
+		if err != nil {
+			assert.NotNil(t, err)
+		}
+		assert.Empty(t, value)
+		ht.NonceKey = nonceKey
+	})
+
+	t.Run("Plain Peasant and Transport New Nonce Generation", func(t *testing.T) {
 		p := NewPeasant(ht)
 		nonce, err := p.NewNonce()
 		if err != nil {
@@ -93,7 +127,7 @@ func TestHttpTransport(t *testing.T) {
 		assert.NotNil(t, nonce)
 	})
 
-	t.Run("Request OK", func(t *testing.T) {
+	t.Run("Custom Request OK", func(t *testing.T) {
 		p := NewTestPesant(NewPeasant(NewTestTransport(ht)))
 		something, err := p.DoSomething(t)
 		if err != nil {
