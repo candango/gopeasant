@@ -1,7 +1,7 @@
 github.com/bsm/ginkgo/v2 v2.12.0 h1:Ny8MWAHyOepLGlLKYmXG4IEkioBysk6GpaRTLC8zwWs=
 github.com/bsm/gomega v1.27.10 h1:yeMWxP2pV2fG3FgAODIY8EiRE3dy0aeFYt4l7wh6yKA=
-github.com/candango/httpok v0.0.7 h1:n8NU06/3BYz9W8Jt6O2Ks5OF0mP2SKSaec06Hpn5NNc=
-github.com/candango/httpok v0.0.7/go.mod h1:hBDRO0rVgumEA9qyzMTX1jiyPgie5+sokYeKBVT9go8=
+github.com/candango/httpok v0.0.8 h1:/E3RBhC0cu6t4O6Bm4h77K4IJOUmgQ74rboPIigIdtU=
+github.com/candango/httpok v0.0.8/go.mod h1:hBDRO0rVgumEA9qyzMTX1jiyPgie5+sokYeKBVT9go8=
 github.com/cespare/xxhash/v2 v2.2.0 h1:DC2CZ1Ep5Y4k3ZQ899DldepgrayRUGE6BBZ/cd9Cj44=
 github.com/cespare/xxhash/v2 v2.2.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
