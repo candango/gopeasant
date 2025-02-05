@@ -22,7 +22,7 @@ func randomString(s int) string {
 // DummyInMemoryNonceService implements the NonceService interface for managing
 // nonces in an in-memory map.
 type DummyInMemoryNonceService struct {
-	nonceMap map[string]*interface{}
+	nonceMap map[string]*any
 }
 
 func (s *DummyInMemoryNonceService) Block(resp http.ResponseWriter,
@@ -102,6 +102,6 @@ func (s *DummyInMemoryNonceService) Provided(w http.ResponseWriter,
 
 func NewDummyInMemoryNonceService() *DummyInMemoryNonceService {
 	return &DummyInMemoryNonceService{
-		nonceMap: make(map[string]*interface{}),
+		nonceMap: make(map[string]*any),
 	}
 }

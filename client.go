@@ -14,7 +14,7 @@ type Transport interface {
 	// NewNonce generates a new nonce.
 	NewNonce() (string, error)
 	// Directory returns the directory map.
-	Directory() (map[string]interface{}, error)
+	Directory() (map[string]any, error)
 }
 
 // HttpTransport implements the Transport interface for HTTP communications.
@@ -93,7 +93,7 @@ func (ht *HttpTransport) NewNonce() (string, error) {
 
 type DirectoryProvider interface {
 	// NewNonce generates a new nonce.
-	Directory() (map[string]interface{}, error)
+	Directory() (map[string]any, error)
 	GetUrl() string
 }
 
@@ -102,7 +102,7 @@ type MemoryDirectoryProvider struct {
 }
 
 func (p *MemoryDirectoryProvider) Directory() (map[string]any, error) {
-	return map[string]interface{}{
+	return map[string]any{
 		"newNonce": p.GetUrl() + "/nonce/new-nonce",
 	}, nil
 }

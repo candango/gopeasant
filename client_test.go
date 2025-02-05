@@ -19,7 +19,7 @@ func NewTestTransport(tr *HttpTransport) *TestTransport {
 	return &TestTransport{tr}
 }
 
-func (tt *TestTransport) Directory() (map[string]interface{}, error) {
+func (tt *TestTransport) Directory() (map[string]any, error) {
 	d, err := tt.HttpTransport.Directory()
 	if err != nil {
 		return nil, err
