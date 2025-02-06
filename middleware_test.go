@@ -30,7 +30,7 @@ func NewNoncedServeMux(t *testing.T) http.Handler {
 	h := http.NewServeMux()
 	h.HandleFunc("/new-nonce", nonced.GetNonce)
 	h.HandleFunc("/do-nonced-something", nonced.DoNoncedFunc)
-	return Nonced(h, s)
+	return NonceServed(s, "")(Nonced(h, s))
 }
 
 func TestNoncedServer(t *testing.T) {
