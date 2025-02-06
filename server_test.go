@@ -30,12 +30,17 @@ type NoncedHandler struct {
 }
 
 func (h *NoncedHandler) GetNonce(w http.ResponseWriter, r *http.Request) {
+	s, ok := r.Context().Value("nonce-service").(NonceService)
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	method := r.Method
 	if method != http.MethodHead {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	nonce, err := h.s.GetNonce(r)
+	nonce, err := s.GetNonce(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -54,19 +59,17 @@ func (h *NoncedHandler) DoNoncedFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewNoncedHandler(s NonceService) *NoncedHandler {
-	return &NoncedHandler{
-		s: s,
-	}
+	return &NoncedHandler{}
 }
 
-func NewNoncedFuncServeMux(t *testing.T) *http.ServeMux {
+func NewNoncedFuncServeMux(t *testing.T) http.Handler {
 	s := dummy.NewDummyInMemoryNonceService()
 	nonced := NewNoncedHandler(s)
 	h := http.NewServeMux()
 	h.HandleFunc("/new-nonce", NoncedHandlerFunc(s, nonced.GetNonce))
 	h.HandleFunc("/do-nonced-something",
 		NoncedHandlerFunc(s, nonced.DoNoncedFunc))
-	return h
+	return NonceServed(s, "")(h)
 }
 
 func TestNoncedFuncServer(t *testing.T) {
