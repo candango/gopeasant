@@ -1,23 +1,12 @@
 package dummy
 
 import (
-	"math/rand"
 	"net/http"
 	"strings"
 	"time"
-)
 
-func randomString(s int) string {
-	asciiLower := "abcdefghijklmnopqrstuvwxyz"
-	asciiUpper := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	digits := "012345679"
-	chars := []rune(asciiLower + asciiUpper + digits)
-	r := make([]rune, s)
-	for i := range r {
-		r[i] = chars[rand.Intn(len(chars))]
-	}
-	return string(r)
-}
+	"github.com/candango/httpok/security"
+)
 
 // DummyInMemoryNonceService implements the NonceService interface for managing
 // nonces in an in-memory map.
@@ -63,7 +52,7 @@ func (s *DummyInMemoryNonceService) Consume(res http.ResponseWriter,
 }
 
 func (s *DummyInMemoryNonceService) GetNonce(req *http.Request) (string, error) {
-	nonce := randomString(32)
+	nonce := security.RandomString(32)
 	s.nonceMap[nonce] = nil
 	ticker := time.NewTicker(250 * time.Millisecond)
 	done := make(chan bool)
