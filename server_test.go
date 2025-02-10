@@ -92,7 +92,6 @@ func TestNoncedFuncServer(t *testing.T) {
 			assert.Equal(t, "200 OK", res.Status)
 			assert.Equal(t, "Func done with nonce "+nonce,
 				testrunner.BodyAsString(t, res))
-			assert.Equal(t, 32, len(res.Header.Get("nonce")))
 		})
 		t.Run("Expired nonce", func(t *testing.T) {
 			res, err := runner.WithPath("/new-nonce").Head()

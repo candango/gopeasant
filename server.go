@@ -34,15 +34,6 @@ func NoncedHandlerFunc(
 		if wrapped.StatusCode >= 300 {
 			return
 		}
-		nonce, err := s.GetNonce(r)
-		if err != nil {
-			wrapped.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		if wrapped.StatusCode >= 300 {
-			return
-		}
-		wrapped.Header().Add("nonce", nonce)
 		f(wrapped, r)
 	}
 }
