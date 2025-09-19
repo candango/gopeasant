@@ -1,6 +1,7 @@
 package peasant
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 	"time"
@@ -52,10 +53,25 @@ func NewNoncedFuncServeMux(t *testing.T) http.Handler {
 	s := dummy.NewDummyInMemoryNonceService()
 	nonced := NewNoncedHandler(s)
 	h := http.NewServeMux()
+	h.HandleFunc("/directory", GetDirectory)
 	h.HandleFunc("/new-nonce", NoncedHandlerFunc(s, nonced.GetNonce))
 	h.HandleFunc("/do-nonced-something",
 		NoncedHandlerFunc(s, nonced.DoNoncedFunc))
 	return NonceServed(s, "")(h)
+}
+
+func GetDirectory(w http.ResponseWriter, r *http.Request) {
+	directory := map[string]any{
+		"new-nonce":    "/new-nonce",
+		"do-something": "/do-nonced-something",
+	}
+	w.Header().Set("Content-Type", "application/json")
+	out, err := json.Marshal(directory)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Write(out)
 }
 
 func TestNoncedFuncServer(t *testing.T) {

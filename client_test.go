@@ -83,7 +83,10 @@ func NewServer(t *testing.T) *httptest.Server {
 func TestHttpTransport(t *testing.T) {
 	server := NewServer(t)
 	dp := &MemoryDirectoryProvider{server.URL}
-	ht := NewHttpTransport(dp)
+	ht, err := NewHttpTransport(dp)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Run("NewNonceUrl should return url if DirectoryKey is valid and error otherwise", func(t *testing.T) {
 		directoryKey := ht.DirectoryKey
@@ -135,5 +138,26 @@ func TestHttpTransport(t *testing.T) {
 		}
 		assert.True(t, strings.HasPrefix(something, "Func done with nonce "))
 
+	})
+}
+
+func TestHttpDirectoryProvider(t *testing.T) {
+	server := NewServer(t)
+	dp := NewHttpDirectoryProvider(server.URL + "/nonce/directory")
+	ht, err := NewHttpTransport(dp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("Should return directory at the directory", func(t *testing.T) {
+		expected := map[string]any{
+			"new-nonce":    "/new-nonce",
+			"do-something": "/do-nonced-something",
+		}
+		directory, err := ht.Directory()
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, expected, directory)
 	})
 }

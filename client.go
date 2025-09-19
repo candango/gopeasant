@@ -31,16 +31,22 @@ type HttpTransport struct {
 	NonceKey string
 }
 
-// NewHttpTransport initializes a new HttpTransport with the given URL and
-// nonce key.
-func NewHttpTransport(p DirectoryProvider) *HttpTransport {
-	return &HttpTransport{
+// NewHttpTransport initializes and returns a new HttpTransport using the
+// provided DirectoryProvider. It sets up the transport in the provider and
+// returns the configured HttpTransport. Returns an error if setting the
+// transport fails.
+func NewHttpTransport(p DirectoryProvider) (*HttpTransport, error) {
+	ht := &HttpTransport{
 		DirectoryProvider: p,
 		DirectoryKey:      "newNonce",
 		DirectoryMethod:   http.MethodHead,
 		Client:            http.Client{},
 		NonceKey:          "Nonce",
 	}
+	if err := p.SetTransport(ht); err != nil {
+		return nil, err
+	}
+	return ht, nil
 }
 
 // NewNonceUrl returns the URL for generating a new nonce. Developers should
@@ -52,10 +58,9 @@ func (ht *HttpTransport) NewNonceUrl() (string, error) {
 	}
 	val, ok := d[ht.DirectoryKey]
 	if !ok {
-		return "", errors.New(fmt.Sprintf(
+		return "", fmt.Errorf(
 			"the transport wasn't able to find the nonce key %s",
-			ht.DirectoryKey,
-		))
+			ht.DirectoryKey)
 	}
 	return val.(string), nil
 }
@@ -91,24 +96,88 @@ func (ht *HttpTransport) NewNonce() (string, error) {
 	return ht.ResolveNonce(res), nil
 }
 
+// DirectoryProvider defines the interface for objects that provide directory
+// information. Implementations should support retrieving a directory map,
+// getting the URL, and setting the transport.
 type DirectoryProvider interface {
-	// NewNonce generates a new nonce.
+	// Directory fetches the directory map from the provider.
 	Directory() (map[string]any, error)
+	// GetUrl returns the provider's URL.
 	GetUrl() string
+	// SetTransport sets the transport mechanism for the provider.
+	SetTransport(Transport) error
 }
 
+// MemoryDirectoryProvider is an in-memory implementation of DirectoryProvider.
+// It holds a URL and returns predefined directory data.
 type MemoryDirectoryProvider struct {
 	url string
 }
 
+// Directory returns a static map containing the directory endpoints.
+// It constructs the "newNonce" endpoint using the provider's URL.
 func (p *MemoryDirectoryProvider) Directory() (map[string]any, error) {
 	return map[string]any{
 		"newNonce": p.GetUrl() + "/nonce/new-nonce",
 	}, nil
 }
 
+// GetUrl returns the URL configured for the memory provider.
 func (p *MemoryDirectoryProvider) GetUrl() string {
 	return p.url
+}
+
+// SetTransport is a no-op for MemoryDirectoryProvider, as it does not use a
+// transport. It always returns nil.
+func (p *MemoryDirectoryProvider) SetTransport(_ Transport) error {
+	return nil
+}
+
+// HttpDirectoryProvider provides access to a remote directory via HTTP.
+// It uses an embedded HttpTransport to make requests to the given URL.
+type HttpDirectoryProvider struct {
+	Url string
+	*HttpTransport
+}
+
+// NewHttpDirectoryProvider creates and returns a new HttpDirectoryProvider
+// with the given URL.
+func NewHttpDirectoryProvider(url string) *HttpDirectoryProvider {
+	return &HttpDirectoryProvider{
+		Url: url,
+	}
+}
+
+// Directory fetches the remote directory from the provider's URL.
+// It returns a map representing the directory, or an error if the request or
+// decoding fails.
+func (p *HttpDirectoryProvider) Directory() (map[string]any, error) {
+	r, err := p.HttpTransport.Get(p.GetUrl())
+	if err != nil {
+		return nil, err
+	}
+	dir := map[string]any{}
+	err = BodyAsJson(r, &dir)
+	if err != nil {
+		return nil, err
+	}
+	return dir, nil
+}
+
+// GetUrl returns the URL configured for the HTTP directory provider.
+func (p *HttpDirectoryProvider) GetUrl() string {
+	return p.Url
+}
+
+// SetTransport sets the HTTP transport for the provider. It attempts to cast
+// the given Transport to *HttpTransport. Returns an error if the cast fails.
+func (p *HttpDirectoryProvider) SetTransport(t Transport) error {
+	var ok bool
+	p.HttpTransport, ok = t.(*HttpTransport)
+	if !ok {
+		return errors.New("was not able to cast Transport to HttpTransport")
+	}
+	return nil
 }
 
 // Peasant represents an agent in the Peasant protocol, which communicates with
