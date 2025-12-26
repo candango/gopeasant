@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/candango/httpok v0.1.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.11.1
 )
 
 require (
