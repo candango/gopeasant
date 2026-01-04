@@ -23,10 +23,10 @@ that peasants can consume.
 ## Support
 
 GoPeasat is one of
-[Candango Open Source Group](http://www.candango.org/projects/)
-initiatives. Available under the [MIT License](https://mit-license.org).
+[Candango Open Source Group](http://www.candango.org/projects/) initiatives.
+Available under the [MIT License](https://mit-license.org).
 
-This site and all documentation are licensed under
+Documentation is licensed under
 [Creative Commons 3.0](http://creativecommons.org/licenses/by/3.0/).
 
-Copyright © 2023-2025 Flavio Garcia
+Copyright © 2023-2026 Flavio Garcia
